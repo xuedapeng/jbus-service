@@ -18,7 +18,6 @@ import com.moqbus.service.common.mail.ZMailManager;
 import com.moqbus.service.db.mysql.bean.EventEntity;
 import com.moqbus.service.db.mysql.bean.WarningContactEntity;
 import com.moqbus.service.db.mysql.dao.EventDao;
-import com.moqbus.service.proxy.ThreadProxy.Executor;
 
 
 // 设备上下线信息相关服务
@@ -52,6 +51,7 @@ public class EventService {
 		String memo = JsonHelper.map2json(data);
 		
 		EventEntity eventEntity = new EventEntity();
+		eventEntity.setDeviceId(Global.cacheDevice.map.get(deviceSn).getId());
 		eventEntity.setDeviceSn(deviceSn);
 		eventEntity.setEvent(event);
 		eventEntity.setTime(DateHelper.fromYmdhms(time));
@@ -61,17 +61,11 @@ public class EventService {
 			return;
 		}
 		
-		Global.threadProxyEvent.addExecutor(new Executor() {
+		Global.threadProxyEvent.addExecutor(()->{
 
-			@Override
-			public void run() {
-
-				EventDao.insert(eventEntity);
-				
-				log.info("save event: " + memo);
-				
-			}
+			EventDao.insert(eventEntity);
 			
+			log.info("save event: " + memo);
 		});
 
 		sendWarning(eventEntity);
@@ -104,33 +98,31 @@ public class EventService {
 //			_eventHistMap.put(eventEntity.getDeviceSn(), eventEntity.getEvent());
 //		}
 		
-		Global.threadProxyWarning.addExecutor(new Executor() {
-
-			@Override
-			public void run() {
-
-				String mail = contact.getEmail();
-				String[] to = mail.split(",");
-				String bcc = mail.substring(mail.indexOf(",")+1);
-				List<ZMailBean> mailList = new ArrayList<ZMailBean>();
-				// 发送邮件通知
-				for(String t : to) {
-					ZMailBean mailBean = new ZMailBean();
-					mailBean.setAddress(t);
+		Global.threadProxyWarning.addExecutor(()->{
+			
+			String mail = contact.getEmail();
+			String[] to = mail.split(",");
+			String bcc = mail.substring(mail.indexOf(",")+1);
+			List<ZMailBean> mailList = new ArrayList<ZMailBean>();
+			// 发送邮件通知
+			for(String t : to) {
+				ZMailBean mailBean = new ZMailBean();
+				mailBean.setAddress(t);
 //					mailBean.setBcc(bcc);
-					mailBean.setSubject(String.format("通知:%s(%s)",
-							_eventNameMap.get(eventEntity.getEvent()),
-							eventEntity.getDeviceSn()));
-					mailBean.setContent(String.format("发生报警事件，请及时处理。   \n ---------------\n%s ", 
-							eventEntity.getMemo()));
-					mailBean.setFromNickname("moqbus service");
-					mailBean.setFromAddressDisp(ZSystemConfig.getProperty("mail_send_account"));
-					mailList.add(mailBean);
-				}
-				ZMailManager.send(mailList);
-				log.info("send mail: " + eventEntity.getMemo());
-				
+				mailBean.setSubject(String.format("%s通知(%s)",
+						_eventNameMap.get(eventEntity.getEvent()),
+						Global.cacheDevice.map.get(eventEntity.getDeviceSn()).getDeviceName()));
+				mailBean.setContent(String.format("设备编号：%s <br/> 事件类型：%s   <br/><br/> ---------------<br/> %s ", 
+						eventEntity.getDeviceSn(),
+						_eventNameMap.get(eventEntity.getEvent()),
+						eventEntity.getMemo()));
+				mailBean.setFromNickname("moqbus service");
+				mailBean.setFromAddressDisp(ZSystemConfig.getProperty("mail_send_account"));
+				mailList.add(mailBean);
 			}
+			ZMailManager.send(mailList);
+			log.info("send mail: " + eventEntity.getMemo());
+				
 			
 		});
 	}

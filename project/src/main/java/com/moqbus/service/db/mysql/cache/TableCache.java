@@ -16,14 +16,21 @@ public class TableCache<E extends CacheableEntity, D extends CacheableDao<E>> {
 
 	static Logger log = Logger.getLogger(TableCache.class);
 
+	
+	
 	public List<E> list = new LinkedList<E>();
 	public Map<String, E> map = new HashMap<String, E>();
 	public Map<String, Map<String, Object>> attrMap = new HashMap<String, Map<String, Object>>();
 	
+	
 	int _updateInterval = 10*1000; // 默认10秒检查更新
 	String _cacheName = "";
 	CacheableDao<E> _dao;
-
+	
+	List<ChangeMonitor> _addMonitorList = new ArrayList<ChangeMonitor>();
+	List<ChangeMonitor> _updateMonitorList = new ArrayList<ChangeMonitor>();
+	List<ChangeMonitor> _deleteMonitorList = new ArrayList<ChangeMonitor>();
+	
 	Integer _maxId = 0;
 	Date _maxTime = new Date();
 	
@@ -100,6 +107,10 @@ public class TableCache<E extends CacheableEntity, D extends CacheableDao<E>> {
 
 					if (item.getId().equals(changedItem.getId())) {
 						remove4updateList.add(item);
+
+						_updateMonitorList.forEach((E)->{
+							E.onChanged(item.getCacheKeyVal(), item);
+						});
 					}
 				});
 			});
@@ -110,11 +121,13 @@ public class TableCache<E extends CacheableEntity, D extends CacheableDao<E>> {
 				
 				if(e.getId() > preMaxId || !contains) {
 					addedCount++;
+					_addMonitorList.forEach((E)->{
+						E.onChanged(e.getCacheKeyVal(), e);
+					});
 				}
+				
 				list.add(e);
-				if (e instanceof WarningContactEntity) {
-					log.info("AAAAAAAAA e.email=" + ((WarningContactEntity)e).getEmail());
-				}
+				
 			}
 
 			remove4updateList.forEach((item)->{
@@ -137,6 +150,10 @@ public class TableCache<E extends CacheableEntity, D extends CacheableDao<E>> {
 			list.forEach((item)->{
 				if (!idsList.contains(item.getId())) {
 					removeList.add(item);
+					
+					_deleteMonitorList.forEach((E)->{
+						E.onChanged(item.getCacheKeyVal(), item);
+					});
 				}
 			});
 			
@@ -168,7 +185,23 @@ public class TableCache<E extends CacheableEntity, D extends CacheableDao<E>> {
 			}
 			}
 	}
+
+	public interface ChangeMonitor<E> {
+		public void onChanged(String key, E value);
+	}
 	
+	public static enum ChangeType {ADD, UPDATE, DELETE};
+	public void addMonitor(ChangeType type, ChangeMonitor<E> changeMonitor) {
+		if (type.equals(ChangeType.ADD)) {
+			this._addMonitorList.add(changeMonitor);
+		}
+		if (type.equals(ChangeType.UPDATE)) {
+			this._updateMonitorList.add(changeMonitor);
+		}
+		if (type.equals(ChangeType.DELETE)) {
+			this._deleteMonitorList.add(changeMonitor);
+		}
+	}
 
 //	 private Class<E> getClassE() {
 //        @SuppressWarnings("unchecked")

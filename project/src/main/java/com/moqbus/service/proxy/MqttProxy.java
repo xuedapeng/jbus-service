@@ -7,6 +7,7 @@ import org.apache.log4j.Logger;
 import org.eclipse.paho.client.mqttv3.MqttException;
 import org.eclipse.paho.client.mqttv3.MqttMessage;
 
+import com.moqbus.service.application.Global;
 import com.moqbus.service.common.constant.JbusConst;
 import com.moqbus.service.common.exception.JbusException;
 import com.moqbus.service.common.helper.HexHelper;
@@ -68,6 +69,11 @@ public class MqttProxy {
 		String topicType = getTopicType(topic);
 		byte[] payload = message.getPayload();
 
+		// 未知设备
+		if (!Global.cacheDevice.map.containsKey(deviceSn)) {
+			return;
+		}
+		
 		String content = "";
 		if (topicType.equals(JbusConst.TOPIC_PREFIX_DAT)) {
 			

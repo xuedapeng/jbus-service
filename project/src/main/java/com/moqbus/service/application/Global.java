@@ -6,10 +6,12 @@ import org.apache.log4j.PropertyConfigurator;
 
 import com.moqbus.service.common.conf.ZSystemConfig;
 import com.moqbus.service.db.mysql.bean.DatDecodeEntity;
+import com.moqbus.service.db.mysql.bean.DeviceEntity;
 import com.moqbus.service.db.mysql.bean.ScheduleEntity;
 import com.moqbus.service.db.mysql.bean.WarningContactEntity;
 import com.moqbus.service.db.mysql.cache.TableCache;
 import com.moqbus.service.db.mysql.dao.DatDecodeDao;
+import com.moqbus.service.db.mysql.dao.DeviceDao;
 import com.moqbus.service.db.mysql.dao.ScheduleDao;
 import com.moqbus.service.db.mysql.dao.WarningContactDao;
 import com.moqbus.service.proxy.ThreadProxy;
@@ -44,5 +46,9 @@ public class Global {
 	public static TableCache<WarningContactEntity, WarningContactDao<WarningContactEntity>> cacheWarningContact = 
 			new TableCache<WarningContactEntity, WarningContactDao<WarningContactEntity>>(
 					"warningContactCache", new WarningContactDao<WarningContactEntity>(), 30);
+	public static TableCache<DeviceEntity, DeviceDao<DeviceEntity>> cacheDevice = 
+			new TableCache<DeviceEntity, DeviceDao<DeviceEntity>>(
+					"deviceCache", new DeviceDao<DeviceEntity>(), 30);
+
 
 }
