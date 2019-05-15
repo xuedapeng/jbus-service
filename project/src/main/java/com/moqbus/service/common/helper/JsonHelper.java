@@ -39,4 +39,12 @@ public class JsonHelper {
         return list;
 	}
 	
+	public static Object ifnull(Object o, Object replace) {
+		if (o == null) {
+			return replace;
+		}
+		
+		return o;
+	}
+	
 }

@@ -1,10 +1,12 @@
 package com.moqbus.service.schedule;
 
 import java.util.ArrayList;
-import java.util.Date;
+import java.util.Calendar;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
 
 import org.apache.log4j.Logger;
 
@@ -25,6 +27,13 @@ public class EventService {
 
 	static Logger log = Logger.getLogger(EventService.class);
 	
+	static final String EVENT_TYPE_ON = "on";
+	static final String EVENT_TYPE_OFF = "off";
+	static final String EVENT_TYPE_MAX = "max";
+	static final String EVENT_TYPE_MIN = "min";
+	static final String EVENT_TYPE_NORMAL = "normal";
+	
+	
 	static Map<String, Integer> _eventMaskMap = ImmutableMap.of(
 			"on", 1, 
 			"off", 2, 
@@ -42,13 +51,20 @@ public class EventService {
 			);
 	
 	static Map<String, String> _eventHistMap = new HashMap<String, String>();
+	static {
+		clearHistoryTask();
+	}
 	
+	// data: deviceSn, sno, field, time, event, detail
 	public static void saveEvent(Map<String, Object> data) {
 
 		String deviceSn = (String)data.get("deviceSn");
+		String sno = (String) JsonHelper.ifnull(data.get("sno"), "");
+		String field = (String) JsonHelper.ifnull(data.get("field"), "");
 		String time = (String)data.get("time");
 		String event = (String)data.get("event");
-		String memo = JsonHelper.map2json(data);
+		String detail = (String)data.get("detail");
+		String memo = (String) JsonHelper.ifnull(detail, JsonHelper.map2json(data));
 		
 		EventEntity eventEntity = new EventEntity();
 		eventEntity.setDeviceId(Global.cacheDevice.map.get(deviceSn).getId());
@@ -68,6 +84,10 @@ public class EventService {
 			log.info("save event: " + memo);
 		});
 
+		// 阀值报警策略, 同类警报不连续发送
+		_eventHistMap.put(deviceSn + "_" + sno + "_" + field, event);
+		log.info("event=" + deviceSn + "_" + sno + "_" + field + ":" + event);
+		
 		sendWarning(eventEntity);
 	}
 	
@@ -88,15 +108,6 @@ public class EventService {
 		if ((recvEvent&eventMask) != eventMask) {
 			return;
 		}
-		
-		// todo:阀值报警策略, 
-//		String lastEvent = _eventHistMap.get(eventEntity.getDeviceSn());
-//		
-//		if (eventEntity.getEvent().equals(lastEvent)) {
-//			return;
-//		} else {
-//			_eventHistMap.put(eventEntity.getDeviceSn(), eventEntity.getEvent());
-//		}
 		
 		Global.threadProxyWarning.addExecutor(()->{
 			
@@ -126,7 +137,19 @@ public class EventService {
 			
 		});
 	}
-
+	
+	// 每天8时清空事件历史，同类警报重复发送一次
+	private static void clearHistoryTask() {
+		Executors.newScheduledThreadPool(1).scheduleAtFixedRate(new Runnable() {
+	        @Override
+	        public void run() {
+	        	Calendar now = Calendar.getInstance();
+	        	if (now.get(Calendar.HOUR_OF_DAY) == 8 && now.get(Calendar.MINUTE) == 0) {
+		        	_eventHistMap.clear();
+	        	}
+	        }
+	    }, 0, 60, TimeUnit.SECONDS);
+	}
 }
 
 

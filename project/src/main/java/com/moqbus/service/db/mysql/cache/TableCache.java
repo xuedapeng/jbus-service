@@ -10,13 +10,11 @@ import java.util.stream.Collectors;
 
 import org.apache.log4j.Logger;
 
-import com.moqbus.service.db.mysql.bean.WarningContactEntity;
+import com.moqbus.service.application.Global;
 
 public class TableCache<E extends CacheableEntity, D extends CacheableDao<E>> {
 
 	static Logger log = Logger.getLogger(TableCache.class);
-
-	
 	
 	public List<E> list = new LinkedList<E>();
 	public Map<String, E> map = new HashMap<String, E>();
@@ -27,9 +25,12 @@ public class TableCache<E extends CacheableEntity, D extends CacheableDao<E>> {
 	String _cacheName = "";
 	CacheableDao<E> _dao;
 	
-	List<ChangeMonitor> _addMonitorList = new ArrayList<ChangeMonitor>();
-	List<ChangeMonitor> _updateMonitorList = new ArrayList<ChangeMonitor>();
-	List<ChangeMonitor> _deleteMonitorList = new ArrayList<ChangeMonitor>();
+	List<ChangeMonitor<E>> _addMonitorList = new ArrayList<ChangeMonitor<E>>();
+	List<ChangeMonitor<E>> _updateMonitorList = new ArrayList<ChangeMonitor<E>>();
+	List<ChangeMonitor<E>> _deleteMonitorList = new ArrayList<ChangeMonitor<E>>();
+	List<E> _addList = new ArrayList<E>();
+	List<E> _updateList = new ArrayList<E>();
+	List<E> _deleteList = new ArrayList<E>();
 	
 	Integer _maxId = 0;
 	Date _maxTime = new Date();
@@ -79,6 +80,7 @@ public class TableCache<E extends CacheableEntity, D extends CacheableDao<E>> {
 	}
 
 	
+	@SuppressWarnings("unchecked")
 	public synchronized boolean update() {
 
 		boolean ret = false;
@@ -107,10 +109,7 @@ public class TableCache<E extends CacheableEntity, D extends CacheableDao<E>> {
 
 					if (item.getId().equals(changedItem.getId())) {
 						remove4updateList.add(item);
-
-						_updateMonitorList.forEach((E)->{
-							E.onChanged(item.getCacheKeyVal(), item);
-						});
+						_updateList.add(changedItem);
 					}
 				});
 			});
@@ -121,9 +120,7 @@ public class TableCache<E extends CacheableEntity, D extends CacheableDao<E>> {
 				
 				if(e.getId() > preMaxId || !contains) {
 					addedCount++;
-					_addMonitorList.forEach((E)->{
-						E.onChanged(e.getCacheKeyVal(), e);
-					});
+					_addList.add(e);
 				}
 				
 				list.add(e);
@@ -134,8 +131,8 @@ public class TableCache<E extends CacheableEntity, D extends CacheableDao<E>> {
 				list.remove(item);
 			});
 			
-			log.info(String.format("Cache->%s, added:%d", _cacheName, addedCount));
-			log.info(String.format("Cache->%s, updated:%d", _cacheName, listTimeChanged.size() - addedCount));
+			log.debug(String.format("Cache->%s, added:%d", _cacheName, addedCount));
+			log.debug(String.format("Cache->%s, updated:%d", _cacheName, listTimeChanged.size() - addedCount));
 			
 		}
 
@@ -150,10 +147,7 @@ public class TableCache<E extends CacheableEntity, D extends CacheableDao<E>> {
 			list.forEach((item)->{
 				if (!idsList.contains(item.getId())) {
 					removeList.add(item);
-					
-					_deleteMonitorList.forEach((E)->{
-						E.onChanged(item.getCacheKeyVal(), item);
-					});
+					_deleteList.add(item);
 				}
 			});
 			
@@ -162,14 +156,45 @@ public class TableCache<E extends CacheableEntity, D extends CacheableDao<E>> {
 				
 			});
 			
-			log.info(String.format("Cache->%s, removed:%d", _cacheName, removeList.size()));
+			log.debug(String.format("Cache->%s, removed:%d", _cacheName, removeList.size()));
 		}
 		if (ret) {
 			makeMap();
+			trigChanged();
 		}
 
-		log.info(String.format("Cache->%s, list.size= %d", _cacheName, list.size()));
+		log.debug(String.format("Cache->%s, list.size= %d", _cacheName, list.size()));
 		return ret;
+	}
+	
+	private void trigChanged() {
+
+		_addList.forEach((item)->{
+			_addMonitorList.forEach((C)->{
+				Global.executor4CacheMonitor.execute(()->{
+					C.onChanged(item.getCacheKeyVal(), item);
+				});
+			});
+		});
+		_addList.clear();
+		
+		_updateList.forEach((item)->{
+			_updateMonitorList.forEach((C)->{
+				Global.executor4CacheMonitor.execute(()->{
+					C.onChanged(item.getCacheKeyVal(), item);
+				});
+			});
+		});
+		_updateList.clear();
+		
+		_deleteList.forEach((item)->{
+			_deleteMonitorList.forEach((C)->{
+				Global.executor4CacheMonitor.execute(()->{
+					C.onChanged(item.getCacheKeyVal(), item);
+				});
+			});
+		});
+		_deleteList.clear();
 	}
 
 	private void makeMap() {
@@ -180,10 +205,8 @@ public class TableCache<E extends CacheableEntity, D extends CacheableDao<E>> {
 			map = list.stream().collect(Collectors.toMap(E::getCacheKeyVal, a -> a,(k1,k2)->k1));
 
 			log.info(String.format("Cache->%s, map.size= %d", _cacheName, map.size()));
-			if (_cacheName.indexOf("Contact")>0) {
-				log.info(String.format("BBBBBBBB Cache->%s, map->BJW401= %s", _cacheName, ((WarningContactEntity)map.get("BJW401")).getEmail()));
-			}
-			}
+			
+		}
 	}
 
 	public interface ChangeMonitor<E> {

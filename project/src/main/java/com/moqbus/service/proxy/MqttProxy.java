@@ -48,7 +48,7 @@ public class MqttProxy {
 		log.info(String.format("subscribe"));
 		
 		try {
-//			MqttPoolManager.getMqttPool().getInstance().subscribe(JbusConst.TOPIC_PREFIX_CMD + "+");
+			MqttPoolManager.getMqttPool().getInstance().subscribe(JbusConst.TOPIC_PREFIX_CMD + "+");
 			MqttPoolManager.getMqttPool().getInstance().subscribe(JbusConst.TOPIC_PREFIX_DAT + "+");
 			MqttPoolManager.getMqttPool().getInstance().subscribe(JbusConst.TOPIC_PREFIX_STS + "+");
 			
@@ -68,17 +68,18 @@ public class MqttProxy {
 		String deviceSn = getDeviceId(topic);
 		String topicType = getTopicType(topic);
 		byte[] payload = message.getPayload();
+		Date time = new Date();
 
 		// 未知设备
 		if (!Global.cacheDevice.map.containsKey(deviceSn)) {
 			return;
 		}
-		
+
 		String content = "";
 		if (topicType.equals(JbusConst.TOPIC_PREFIX_DAT)) {
 			
 			content = HexHelper.bytesToHexString(payload);
-			ScheduleService.saveDat(deviceSn, payload, new Date());
+			ScheduleService.saveDat(deviceSn, payload, time);
 			
 		} else if(topicType.equals(JbusConst.TOPIC_PREFIX_STS)) {
 			try {
@@ -90,6 +91,10 @@ public class MqttProxy {
 			EventService.saveEvent(JsonHelper.json2map(content));
 		}
 
+		Global.executor4Msglog.execute(()->{
+			DbProxy.saveMsgLog(topicType, deviceSn, payload, time);
+		});
+		
 		log.info(String.format("recieve: %s->%s", 
 				topic, content));
 		 

@@ -23,6 +23,7 @@ public class DbProxy {
 	static String _collCmd = "cmd";
 	static String _collDat = "dat";
 	static String _collSts = "sts";
+	static String _collMsglog = "msglog";
 	
 	static Map<String, String> _topicType2Coll = ImmutableMap.of(
 			JbusConst.TOPIC_PREFIX_CMD, _collCmd, 
@@ -82,8 +83,28 @@ public class DbProxy {
         if (cl.get(Calendar.MONTH) >=11 && weekOfYear <=1) {
         	weekOfYear += 52;
         }
-        doc.put("week", timeStr.substring(0, 4)  + " W" + String.valueOf(weekOfYear));
+        doc.put("week", timeStr.substring(0, 4)  + " W" + (weekOfYear<10?"0":"") + String.valueOf(weekOfYear));
         
         return  doc;
+	}
+	
+	// 保存原始的往来指令和返回数据
+	public static void saveMsgLog(String topicType, String deviceSn, byte[] origin, Date time) {
+		
+		if (!JbusConst.TOPIC_PREFIX_CMD.equals(topicType) && !JbusConst.TOPIC_PREFIX_DAT.equals(topicType)) {
+			return;
+		}
+		
+        MongoCollection<Document> coll = MongoUtil.getCollection(_dbName, _collMsglog);
+        Document doc = new Document();
+        doc.put("deviceSn", deviceSn);
+        doc.put("type", topicType);
+        doc.put("msg", HexHelper.bytesToHexString(origin));
+        doc.put("time", time);
+        
+        coll.insertOne(doc);
+        
+        LOG.info("DbProxy.save" + doc.toJson());
+		
 	}
 }

@@ -1,6 +1,8 @@
 package com.moqbus.service.application;
 
 import java.io.File;
+import java.util.concurrent.Executor;
+import java.util.concurrent.Executors;
 
 import org.apache.log4j.PropertyConfigurator;
 
@@ -36,6 +38,8 @@ public class Global {
 	public static ThreadProxy threadProxyRecv = new ThreadProxy(10, 1000, "threadProxyRecv");
 	public static ThreadProxy threadProxyEvent = new ThreadProxy(5, 1000, "threadProxyEvent");
 	public static ThreadProxy threadProxyWarning = new ThreadProxy(5, 1000, "threadProxyWarning");
+	public static Executor executor4CacheMonitor = Executors.newFixedThreadPool(5);
+	public static Executor executor4Msglog = Executors.newFixedThreadPool(5);
 	
 	public static TableCache<ScheduleEntity, ScheduleDao<ScheduleEntity>> cacheSchedule = 
 			new TableCache<ScheduleEntity, ScheduleDao<ScheduleEntity>>(

@@ -1,5 +1,9 @@
 package com.moqbus.service.proxy;
 
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
 
@@ -17,6 +21,9 @@ public class ThreadProxy {
 //	final static int MIN_DELAY = 10; 
 	
 	Executor _executor = null;
+	
+	// 延时执行, *100ms, 最多25,500ms
+	Map<Integer, List<Runnable>> _delayRunnableListMap = new HashMap<Integer, List<Runnable>>();
 //	List<Executor2> _executorList = new ArrayList<Executor2>();
 //	List<MyThread> _threadList = new ArrayList<MyThread>();
 //	int _threadAmount;
@@ -26,6 +33,7 @@ public class ThreadProxy {
 	public ThreadProxy(int threadAmount, int delay, String threadId) {
 		
 		_executor = Executors.newFixedThreadPool(threadAmount);
+		
 //		_threadAmount = threadAmount > MAX_THREADS?MAX_THREADS:(threadAmount<1?1:threadAmount);
 //		
 //		_delay = delay < MIN_DELAY ?MIN_DELAY:delay;
@@ -40,7 +48,60 @@ public class ThreadProxy {
 //		public  void run();
 //	}
 	
+
+	public void addExecutor(Runnable runnable, Integer delay) {
+		
+		if (delay == null || delay.equals(0)) {
+			addExecutor(runnable);
+			return;
+		}
+
+		log.error("delay:"+ delay);
+		List<Runnable> list = _delayRunnableListMap.get(delay);
+		if (list == null) {
+			list = new ArrayList<Runnable>();
+			_delayRunnableListMap.put(delay, list);
+		}
+		
+		list.add(runnable);
+		
+		
+	}
 	
+	public void startDelay() {
+		
+		log.error("_delayRunnableListMap.size:"+ _delayRunnableListMap.size());
+		if (_delayRunnableListMap.isEmpty()) {
+			return;
+		}
+		
+		Executors.newFixedThreadPool(1).execute(()->{
+			for(int i = 1; i<256; i++) {
+
+				log.error("_delayRunnableListMap.size2:"+ _delayRunnableListMap.size());
+				log.error("i:"+ i);
+				if (_delayRunnableListMap.isEmpty()) {
+					break;
+				}
+				
+				try {
+					Thread.sleep(100);
+					
+					log.error("_delayRunnableListMap.containsKey(i):"+ _delayRunnableListMap.containsKey(i));
+					if (_delayRunnableListMap.containsKey(i)) {
+						_delayRunnableListMap.get(i).forEach(R->{
+							_executor.execute(R);
+						});
+						_delayRunnableListMap.remove(i);
+					}
+				} catch (InterruptedException e) {
+					log.error("", e);
+				}
+			}
+			
+			_delayRunnableListMap.clear();
+		});
+	}
 	
 	public void addExecutor(Runnable runnable) {
 		_executor.execute(runnable);

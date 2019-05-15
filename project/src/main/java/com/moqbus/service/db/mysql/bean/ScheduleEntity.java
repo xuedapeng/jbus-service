@@ -9,7 +9,9 @@ public class ScheduleEntity extends CacheableEntity {
 	private Integer id;
 	private Integer deviceId;
 	private String deviceSn;
+//	private Integer sno;
 	private String cmdHex;
+	private String datPtn;
 	private Integer interval;
 	private Integer status;
 	private Date updateTime;
@@ -56,10 +58,23 @@ public class ScheduleEntity extends CacheableEntity {
 	public void setDeviceId(Integer deviceId) {
 		this.deviceId = deviceId;
 	}
+	
+//	public Integer getSno() {
+//		return sno;
+//	}
+//	public void setSno(Integer sno) {
+//		this.sno = sno;
+//	}
+	public String getDatPtn() {
+		return datPtn;
+	}
+	public void setDatPtn(String datPtn) {
+		this.datPtn = datPtn;
+	}
 	@Override
 	public String getCacheKeyVal() {
 		
-		return deviceSn;
+		return deviceSn + "_" + id;
 	}
 	
 }
