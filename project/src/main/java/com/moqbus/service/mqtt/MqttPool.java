@@ -2,8 +2,6 @@ package com.moqbus.service.mqtt;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
 
 import org.apache.log4j.Logger;
 import org.eclipse.paho.client.mqttv3.IMqttDeliveryToken;
@@ -34,6 +32,8 @@ public class MqttPool {
 	
 	 int INIT_SIZE = 1;
 	 final long IDLE_SLEEP = 10*1000;// 休眠10秒；
+	 
+	 int _lastSelected = 0;
 	
 	 MqttConnectOptions _connOpts = new MqttConnectOptions(); 
 	
@@ -179,7 +179,7 @@ public class MqttPool {
 	private  MqttClient whoNotBusy() {
 		
 		return _mqttClientList.get(0);
-		
+		 
 	}
 	
 	private  String makeClientId() {

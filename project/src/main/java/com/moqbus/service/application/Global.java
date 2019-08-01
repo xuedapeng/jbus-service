@@ -37,9 +37,10 @@ public class Global {
 	public static ThreadProxy threadProxySend = new ThreadProxy(5, 10, "threadProxySend");
 	public static ThreadProxy threadProxyRecv = new ThreadProxy(10, 1000, "threadProxyRecv");
 	public static ThreadProxy threadProxyEvent = new ThreadProxy(5, 1000, "threadProxyEvent");
-	public static ThreadProxy threadProxyWarning = new ThreadProxy(5, 1000, "threadProxyWarning");
+	public static ThreadProxy threadProxyWarning = new ThreadProxy(1, 1000, "threadProxyWarning");
 	public static Executor executor4CacheMonitor = Executors.newFixedThreadPool(5);
 	public static Executor executor4Msglog = Executors.newFixedThreadPool(5);
+	public static Executor executor4SendMail = Executors.newFixedThreadPool(1);
 	
 	public static TableCache<ScheduleEntity, ScheduleDao<ScheduleEntity>> cacheSchedule = 
 			new TableCache<ScheduleEntity, ScheduleDao<ScheduleEntity>>(

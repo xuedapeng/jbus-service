@@ -4,6 +4,7 @@ import org.apache.log4j.Logger;
 
 import com.moqbus.service.mqtt.MqttPoolManager;
 import com.moqbus.service.proxy.MqttProxy;
+import com.moqbus.service.schedule.MailService;
 import com.moqbus.service.schedule.ScheduleService;
 import com.moqbus.service.application.Global;
 
@@ -22,6 +23,7 @@ public class App {
 		MqttProxy.subscribe();
 		
 		ScheduleService.run();
+		MailService.run();
 		
 		while(true) {
 			try {

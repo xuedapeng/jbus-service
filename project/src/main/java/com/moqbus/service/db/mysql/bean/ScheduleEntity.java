@@ -14,6 +14,8 @@ public class ScheduleEntity extends CacheableEntity {
 	private String datPtn;
 	private Integer interval;
 	private Integer status;
+	private Integer dataLimit;
+	private Integer delay;
 	private Date updateTime;
 	
 	public Integer getId() {
@@ -71,11 +73,30 @@ public class ScheduleEntity extends CacheableEntity {
 	public void setDatPtn(String datPtn) {
 		this.datPtn = datPtn;
 	}
+	
+	
+	public Integer getDataLimit() {
+		return dataLimit;
+	}
+	public void setDataLimit(Integer dataLimit) {
+		this.dataLimit = dataLimit;
+	}
+	
+	
+	
+	public Integer getDelay() {
+		return delay;
+	}
+	public void setDelay(Integer delay) {
+		this.delay = delay;
+	}
 	@Override
 	public String getCacheKeyVal() {
 		
 		return deviceSn + "_" + id;
 	}
+	
+	
 	
 }
 	

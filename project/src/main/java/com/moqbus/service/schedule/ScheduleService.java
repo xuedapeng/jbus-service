@@ -14,6 +14,7 @@ import org.apache.log4j.Logger;
 import com.moqbus.service.application.Global;
 import com.moqbus.service.codec.NashornParser;
 import com.moqbus.service.common.constant.JbusConst;
+import com.moqbus.service.common.helper.ByteHelper;
 import com.moqbus.service.common.helper.DateHelper;
 import com.moqbus.service.common.helper.HexHelper;
 import com.moqbus.service.common.helper.JsonHelper;
@@ -63,9 +64,9 @@ public class ScheduleService {
 		Global.cacheSchedule.list.forEach((sch)->{
 			Integer interval = sch.getInterval();
 			String deviceSn = sch.getDeviceSn();
-			log.info("interval=" + interval);
+//			log.info("interval=" + interval);
 			
-			if (_times % interval == 0) {
+			if ((_times-sch.getDelay()) % interval == 0) {
 				
 				// 首次出现
 				Global.threadProxySend.addExecutor(
@@ -74,7 +75,7 @@ public class ScheduleService {
 //						String deviceSn = sch.getDeviceSn();
 						String cmdHex = sch.getCmdHex();
 						sendCmd(deviceSn, cmdHex);
-						log.error("sendcmd:" + deviceSn + "," + cmdHex);
+						log.info("sendcmd:" + deviceSn + "," + cmdHex);
 					},
 					deviceSnCountMap.get(deviceSn)
 				);
@@ -92,6 +93,11 @@ public class ScheduleService {
 	}
 	
 	private static void sendCmd(String deviceSn, String cmdHex) {
+		
+		if (cmdHex == null || StringUtils.isEmpty(cmdHex.trim())) {
+			return;
+		}
+		
 		byte[] _cmd = HexHelper.hexStringToBytes(cmdHex); 
 		String _topic = JbusConst.TOPIC_PREFIX_CMD + deviceSn;
 		MqttProxy.publish(_topic, _cmd);
@@ -202,7 +208,8 @@ public class ScheduleService {
 				}
 
 				int val = ((List<Double>)ptn).get(1).intValue();
-				if (data[pos] != val) {
+				int dataVal = ByteHelper.toUnsignedInt(data[pos]);
+				if (dataVal != val) {
 					hit = false;
 					break;
 				}
@@ -245,7 +252,7 @@ public class ScheduleService {
 
 		Long nextTimes = (Long)Global.cacheSchedule.getAttribute("nextTimes").get(deviceSnId);
 		
-		if (_times >= nextTimes) {
+		if (_times >= nextTimes || schedule.getDataLimit().equals(0)) {
 
 			Global.threadProxyRecv.addExecutor(
 				()-> {
@@ -258,7 +265,8 @@ public class ScheduleService {
 							// 范围check
 							checkRange(deviceSn, content, datDecode.getResultSchema());
 						} else {
-							DbProxy.saveOrigin(JbusConst.TOPIC_PREFIX_DAT, deviceSn, data, time);
+							// 解析失败的，不保存。（msglog保存了所有的cmd/dat）
+//							DbProxy.saveOrigin(JbusConst.TOPIC_PREFIX_DAT, deviceSn, data, time);
 						}
 
 					}
@@ -341,9 +349,14 @@ public class ScheduleService {
 					if (EventService.EVENT_TYPE_MIN.equals(lastEvent)
 							|| EventService.EVENT_TYPE_MAX.equals(lastEvent)) {
 						
-						eventData.put("event", EventService.EVENT_TYPE_NORMAL);
-						eventData.put("detail", String.format("sno:%s, field:%s, act:%s, range:%s ~ %s", sno,fieldName, val, min, max));
-						eventDataList.add(eventData);
+						if (val < max*(1-0.05) 
+								&& val > min*(1+0.05)) {
+							
+							eventData.put("event", EventService.EVENT_TYPE_NORMAL);
+							eventData.put("detail", String.format("sno:%s, field:%s, act:%s, range:%s ~ %s", sno,fieldName, val, min, max));
+							eventDataList.add(eventData);
+						}
+						
 					}
 				}
 			}

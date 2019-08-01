@@ -56,7 +56,7 @@ public class ThreadProxy {
 			return;
 		}
 
-		log.error("delay:"+ delay);
+//		log.info("delay:"+ delay);
 		List<Runnable> list = _delayRunnableListMap.get(delay);
 		if (list == null) {
 			list = new ArrayList<Runnable>();
@@ -70,7 +70,7 @@ public class ThreadProxy {
 	
 	public void startDelay() {
 		
-		log.error("_delayRunnableListMap.size:"+ _delayRunnableListMap.size());
+		log.info("_delayRunnableListMap.size:"+ _delayRunnableListMap.size());
 		if (_delayRunnableListMap.isEmpty()) {
 			return;
 		}
@@ -78,16 +78,16 @@ public class ThreadProxy {
 		Executors.newFixedThreadPool(1).execute(()->{
 			for(int i = 1; i<256; i++) {
 
-				log.error("_delayRunnableListMap.size2:"+ _delayRunnableListMap.size());
-				log.error("i:"+ i);
+				log.info("_delayRunnableListMap.size2:"+ _delayRunnableListMap.size());
+				log.info("i:"+ i);
 				if (_delayRunnableListMap.isEmpty()) {
 					break;
 				}
 				
 				try {
-					Thread.sleep(100);
+					Thread.sleep(100); // 每个传感器延时100毫秒
 					
-					log.error("_delayRunnableListMap.containsKey(i):"+ _delayRunnableListMap.containsKey(i));
+					log.info("_delayRunnableListMap.containsKey(i):"+ _delayRunnableListMap.containsKey(i));
 					if (_delayRunnableListMap.containsKey(i)) {
 						_delayRunnableListMap.get(i).forEach(R->{
 							_executor.execute(R);

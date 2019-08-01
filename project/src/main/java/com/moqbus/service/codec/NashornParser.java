@@ -9,6 +9,7 @@ import javax.script.Invocable;
 
 import org.apache.log4j.Logger;
 
+import com.moqbus.service.common.helper.ByteHelper;
 import com.moqbus.service.common.helper.HexHelper;
 
 import delight.nashornsandbox.NashornSandbox;
@@ -57,7 +58,7 @@ public class NashornParser {
 			ns = _queue.take();
 			ns.eval(script);
 			Invocable invocable = ns.getSandboxedInvocable();
-			result = (String)invocable.invokeFunction("decodeDat", data);
+			result = (String)invocable.invokeFunction("decodeDat", ByteHelper.toUnsignedInts(data));
 			ParseCache.put(deviceSn, dataStr, result);
 			
 			return result;

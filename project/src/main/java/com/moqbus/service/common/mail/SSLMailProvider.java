@@ -160,7 +160,7 @@ public class SSLMailProvider implements IMailProvider {
 
 		} catch (UnsupportedEncodingException | MessagingException e) {
 			result.setSuccess(false);
-			logger.error(e);
+			logger.error("", e);
 
 		} finally {
 			logger.info(

@@ -52,7 +52,7 @@ public class EventService {
 	
 	static Map<String, String> _eventHistMap = new HashMap<String, String>();
 	static {
-		clearHistoryTask();
+//		clearHistoryTask();
 	}
 	
 	// data: deviceSn, sno, field, time, event, detail
@@ -123,33 +123,35 @@ public class EventService {
 				mailBean.setSubject(String.format("%s通知(%s)",
 						_eventNameMap.get(eventEntity.getEvent()),
 						Global.cacheDevice.map.get(eventEntity.getDeviceSn()).getDeviceName()));
-				mailBean.setContent(String.format("设备编号：%s <br/> 事件类型：%s   <br/><br/> ---------------<br/> %s ", 
+				mailBean.setContent(String.format("设备编号：%s <br/> 事件类型：%s <br/> 时间：%s  <br/><br/> ---------------<br/> %s ", 
 						eventEntity.getDeviceSn(),
 						_eventNameMap.get(eventEntity.getEvent()),
+						DateHelper.toYmdhms(eventEntity.getTime()),
 						eventEntity.getMemo()));
 				mailBean.setFromNickname("moqbus service");
 				mailBean.setFromAddressDisp(ZSystemConfig.getProperty("mail_send_account"));
 				mailList.add(mailBean);
 			}
-			ZMailManager.send(mailList);
-			log.info("send mail: " + eventEntity.getMemo());
+//			ZMailManager.send(mailList);
+			MailService.addWarning(eventEntity.getDeviceSn(), eventEntity.getEvent(), mailList);
+			log.info("addWarning: " + eventEntity.getMemo());
 				
 			
 		});
 	}
 	
 	// 每天8时清空事件历史，同类警报重复发送一次
-	private static void clearHistoryTask() {
-		Executors.newScheduledThreadPool(1).scheduleAtFixedRate(new Runnable() {
-	        @Override
-	        public void run() {
-	        	Calendar now = Calendar.getInstance();
-	        	if (now.get(Calendar.HOUR_OF_DAY) == 8 && now.get(Calendar.MINUTE) == 0) {
-		        	_eventHistMap.clear();
-	        	}
-	        }
-	    }, 0, 60, TimeUnit.SECONDS);
-	}
+//	private static void clearHistoryTask() {
+//		Executors.newScheduledThreadPool(1).scheduleAtFixedRate(new Runnable() {
+//	        @Override
+//	        public void run() {
+//	        	Calendar now = Calendar.getInstance();
+//	        	if (now.get(Calendar.HOUR_OF_DAY) == 8 && now.get(Calendar.MINUTE) == 0) {
+//		        	_eventHistMap.clear();
+//	        	}
+//	        }
+//	    }, 0, 60, TimeUnit.SECONDS);
+//	}
 }
 
 

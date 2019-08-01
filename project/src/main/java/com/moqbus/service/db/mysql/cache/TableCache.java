@@ -21,7 +21,7 @@ public class TableCache<E extends CacheableEntity, D extends CacheableDao<E>> {
 	public Map<String, Map<String, Object>> attrMap = new HashMap<String, Map<String, Object>>();
 	
 	
-	int _updateInterval = 10*1000; // 默认10秒检查更新
+	int _updateInterval = 60*1000; // 默认60秒检查更新
 	String _cacheName = "";
 	CacheableDao<E> _dao;
 	
