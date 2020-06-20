@@ -9,6 +9,7 @@ import javax.script.Invocable;
 
 import org.apache.log4j.Logger;
 
+import com.moqbus.service.common.exception.JbusException;
 import com.moqbus.service.common.helper.ByteHelper;
 import com.moqbus.service.common.helper.HexHelper;
 
@@ -64,7 +65,7 @@ public class NashornParser {
 			return result;
 			
 		} catch (Exception e) {
-			log.error(e.getMessage(), e);
+			log.error(JbusException.trace(e), e);
 		} finally {
 			if (ns != null) {
 				_queue.offer(ns);

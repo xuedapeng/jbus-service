@@ -9,6 +9,8 @@ import java.util.concurrent.Executors;
 
 import org.apache.log4j.Logger;
 
+import com.moqbus.service.common.exception.JbusException;
+
 
 public class ThreadProxy {
 
@@ -95,7 +97,7 @@ public class ThreadProxy {
 						_delayRunnableListMap.remove(i);
 					}
 				} catch (InterruptedException e) {
-					log.error("", e);
+					log.error(JbusException.trace(e), e);
 				}
 			}
 			

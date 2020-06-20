@@ -11,6 +11,7 @@ import java.util.concurrent.TimeUnit;
 import org.apache.log4j.Logger;
 
 import com.moqbus.service.application.Global;
+import com.moqbus.service.common.exception.JbusException;
 import com.moqbus.service.common.mail.ZMailBean;
 import com.moqbus.service.common.mail.ZMailManager;
 
@@ -118,7 +119,7 @@ public class MailService {
 		    	try {
 					Thread.sleep(sleep); // 发个邮件延时10秒，防止受限
 				} catch (InterruptedException e) {
-					log.error("", e);
+					log.error(JbusException.trace(e), e);
 				}
 	    	});
     	});

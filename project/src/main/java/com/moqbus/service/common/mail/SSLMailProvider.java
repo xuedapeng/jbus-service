@@ -23,6 +23,7 @@ import org.apache.log4j.Logger;
 
 import com.moqbus.service.common.conf.IConfig;
 import com.moqbus.service.common.conf.ZSystemConfig;
+import com.moqbus.service.common.exception.JbusException;
 
 
 public class SSLMailProvider implements IMailProvider {
@@ -160,7 +161,7 @@ public class SSLMailProvider implements IMailProvider {
 
 		} catch (UnsupportedEncodingException | MessagingException e) {
 			result.setSuccess(false);
-			logger.error("", e);
+			logger.error(JbusException.trace(e), e);
 
 		} finally {
 			logger.info(

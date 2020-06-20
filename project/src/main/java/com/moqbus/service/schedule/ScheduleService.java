@@ -14,6 +14,7 @@ import org.apache.log4j.Logger;
 import com.moqbus.service.application.Global;
 import com.moqbus.service.codec.NashornParser;
 import com.moqbus.service.common.constant.JbusConst;
+import com.moqbus.service.common.exception.JbusException;
 import com.moqbus.service.common.helper.ByteHelper;
 import com.moqbus.service.common.helper.DateHelper;
 import com.moqbus.service.common.helper.HexHelper;
@@ -58,6 +59,7 @@ public class ScheduleService {
 	private  static void execute() {
 		
 		log.info("_times=" + _times);
+		log.info("cacheSchedule.list.size=" + Global.cacheSchedule.list.size());
 		
 		Map<String, Integer> deviceSnCountMap = new HashMap<String, Integer>();
 		
@@ -76,8 +78,8 @@ public class ScheduleService {
 						String cmdHex = sch.getCmdHex();
 						sendCmd(deviceSn, cmdHex);
 						log.info("sendcmd:" + deviceSn + "," + cmdHex);
-					},
-					deviceSnCountMap.get(deviceSn)
+					}
+//					deviceSnCountMap.get(deviceSn)
 				);
 				
 				if (!deviceSnCountMap.containsKey(deviceSn)) {
@@ -89,7 +91,8 @@ public class ScheduleService {
 		});
 		
 		// 启动延时执行
-		Global.threadProxySend.startDelay();
+//		Global.threadProxySend.startDelay();
+		//schedule表中配置延时单位,此处不需要延时 2019/8/13
 	}
 	
 	private static void sendCmd(String deviceSn, String cmdHex) {
@@ -286,7 +289,7 @@ public class ScheduleService {
 			return result;
 			
 		} catch (Exception e) {
-			log.error(e.getMessage(), e);
+			log.error(JbusException.trace(e), e);
 		}
 
 		return null;

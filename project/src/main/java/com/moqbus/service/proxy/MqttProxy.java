@@ -39,7 +39,7 @@ public class MqttProxy {
 							HexHelper.bytesToHexString(data)));
 			
 		} catch (Exception e) {
-			log.error(e.getMessage(), e);
+			log.error(JbusException.trace(e), e);
 		}
 	}
 	
@@ -53,7 +53,7 @@ public class MqttProxy {
 			MqttPoolManager.getMqttPool().getInstance().subscribe(JbusConst.TOPIC_PREFIX_STS + "+");
 			
 		} catch (MqttException e) {
-			log.error("订阅失败", e);
+			log.error("订阅失败"+JbusException.trace(e), e);
 			throw new JbusException(e);
 		}
 	}

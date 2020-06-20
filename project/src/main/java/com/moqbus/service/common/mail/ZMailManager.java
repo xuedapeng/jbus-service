@@ -6,6 +6,7 @@ import org.apache.log4j.Logger;
 
 import com.moqbus.service.common.conf.IConfig;
 import com.moqbus.service.common.conf.ZSystemConfig;
+import com.moqbus.service.common.exception.JbusException;
 
 
 public class ZMailManager {
@@ -34,7 +35,7 @@ public class ZMailManager {
 			} catch (InstantiationException | IllegalAccessException
 					| ClassNotFoundException e) {
 				
-				logger.error("", e);
+				logger.error(JbusException.trace(e), e);
 			}
 		}
 		

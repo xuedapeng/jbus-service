@@ -6,7 +6,10 @@ import com.moqbus.service.mqtt.MqttPoolManager;
 import com.moqbus.service.proxy.MqttProxy;
 import com.moqbus.service.schedule.MailService;
 import com.moqbus.service.schedule.ScheduleService;
+
+
 import com.moqbus.service.application.Global;
+import com.moqbus.service.common.exception.JbusException;
 
 public class App {
 
@@ -29,7 +32,7 @@ public class App {
 			try {
 				Thread.sleep(IDLE_SECONDS);
 			} catch (InterruptedException e) {
-				LOG.error("", e);
+				LOG.error(JbusException.trace(e), e);
 			}
 			
 			LOG.info("sleep 60 seconds.");

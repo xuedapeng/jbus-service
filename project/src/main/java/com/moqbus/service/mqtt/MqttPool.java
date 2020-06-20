@@ -65,7 +65,7 @@ public class MqttPool {
 			
 		} catch (MqttException e) {
 			
-			logger.error("无法连接到mqtt服务器。", e);
+			logger.error("无法连接到mqtt服务器。"+JbusException.trace(e), e);
 			throw new JbusException(e);
 		}
 	}
@@ -89,7 +89,7 @@ public class MqttPool {
 					try {
 						sleep(IDLE_SLEEP);
 					} catch (InterruptedException e) {
-						logger.error("", e);
+						logger.error(JbusException.trace(e), e);
 					}
 				}
 			}
