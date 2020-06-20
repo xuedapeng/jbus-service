@@ -33,7 +33,7 @@ public class NashornParser {
 		
 		NashornSandbox _nashornSandbox = NashornSandboxes.create();
 		
-		_nashornSandbox.setMaxCPUTime(100);
+		_nashornSandbox.setMaxCPUTime(500);
 		_nashornSandbox.setMaxMemory(10*1024*1024);
 		_nashornSandbox.allowNoBraces(false);
 		_nashornSandbox.setMaxPreparedStatements(30); // because preparing scripts for execution is expensive

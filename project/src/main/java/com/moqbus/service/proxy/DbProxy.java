@@ -2,6 +2,7 @@ package com.moqbus.service.proxy;
 
 import java.util.Calendar;
 import java.util.Date;
+import java.util.List;
 import java.util.Map;
 
 import org.apache.log4j.Logger;
@@ -13,6 +14,7 @@ import com.moqbus.service.common.conf.ZSystemConfig;
 import com.moqbus.service.common.constant.JbusConst;
 import com.moqbus.service.common.helper.DateHelper;
 import com.moqbus.service.common.helper.HexHelper;
+import com.moqbus.service.common.helper.JsonHelper;
 import com.moqbus.service.db.MongoUtil;
 
 public class DbProxy {
@@ -63,7 +65,7 @@ public class DbProxy {
 	
 	public static void saveParsed(String topicType, String deviceSn, String message, byte[] origin, Date time) {
 		
-		save(topicType, deviceSn, message, origin, true, time);
+			save(topicType, deviceSn, message, origin, true, time);
 	}
 	
 	private static Document makeTimeDoc(Date time) {

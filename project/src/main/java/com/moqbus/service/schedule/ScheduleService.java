@@ -227,6 +227,7 @@ public class ScheduleService {
 		return null;
 	}
 	
+	@SuppressWarnings("unchecked")
 	public static void saveDat(String deviceSn, byte[] data, Date time) {
 		List<ScheduleEntity> scheduleList = getScheduleListBySn(deviceSn);
 		if (scheduleList == null ||scheduleList.size() == 0) {
@@ -262,11 +263,27 @@ public class ScheduleService {
 	
 						String content = parse(deviceSn, data, datDecode.getScriptText());
 						if (!StringUtils.isEmpty(content)) {
-							DbProxy.saveParsed(JbusConst.TOPIC_PREFIX_DAT, deviceSn, content, data, time);
 							Long nextTimesLocal = _times + schedule.getInterval();
 							Global.cacheSchedule.getAttribute("nextTimes").put(deviceSnId, nextTimesLocal);
-							// 范围check
-							checkRange(deviceSn, content, datDecode.getResultSchema());
+
+
+							if(content.startsWith("[")) { // 多条数据
+								List<Object> list = JsonHelper.json2list(content);
+								list.forEach((E)->{
+									String m = JsonHelper.map2json((Map<String, Object>)E);
+									m = m.replaceAll(".0,", ",").replaceAll(".0}", "}");
+									DbProxy.saveParsed(JbusConst.TOPIC_PREFIX_DAT, deviceSn, m, data, time);
+									// 范围check
+									checkRange(deviceSn, m, datDecode.getResultSchema());
+								});
+								
+							} else { // 单条数据
+
+								DbProxy.saveParsed(JbusConst.TOPIC_PREFIX_DAT, deviceSn, content, data, time);
+								// 范围check
+								checkRange(deviceSn, content, datDecode.getResultSchema());
+							}
+							
 						} else {
 							// 解析失败的，不保存。（msglog保存了所有的cmd/dat）
 //							DbProxy.saveOrigin(JbusConst.TOPIC_PREFIX_DAT, deviceSn, data, time);
