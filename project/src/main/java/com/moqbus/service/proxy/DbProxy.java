@@ -5,6 +5,7 @@ import java.util.Date;
 import java.util.List;
 import java.util.Map;
 
+import org.apache.commons.lang3.StringUtils;
 import org.apache.log4j.Logger;
 import org.bson.Document;
 
@@ -16,6 +17,8 @@ import com.moqbus.service.common.helper.DateHelper;
 import com.moqbus.service.common.helper.HexHelper;
 import com.moqbus.service.common.helper.JsonHelper;
 import com.moqbus.service.db.MongoUtil;
+import com.moqbus.service.db.mysql.bean.LastDataEntity;
+import com.moqbus.service.db.mysql.dao.LastDataDao;
 
 public class DbProxy {
 
@@ -54,6 +57,8 @@ public class DbProxy {
         coll.insertOne(doc);
         
         LOG.info("DbProxy.save" + doc.toJson());
+        
+
 	}
 	
 	public static void saveOrigin(String topicType, String deviceSn, byte[] orgin, Date time) {
@@ -66,6 +71,32 @@ public class DbProxy {
 	public static void saveParsed(String topicType, String deviceSn, String message, byte[] origin, Date time) {
 		
 			save(topicType, deviceSn, message, origin, true, time);
+
+			// 最新数据保存到mysql，作为实时数据备查
+			saveLastData(topicType, deviceSn, message);
+	}
+	
+	private static void saveLastData(String topicType, String deviceSn, String message) {
+		String sno = JsonHelper.json2map(message).get("sno").toString().replace(".0", "");
+		
+		if(StringUtils.isEmpty(sno)) {
+			return;
+		}
+		
+		LastDataEntity bean = LastDataDao.findBySno(deviceSn, sno);
+		if (bean == null) {
+			bean = new LastDataEntity();
+			bean.setDeviceSn(deviceSn);
+			bean.setSensorNo(sno);
+			bean.setDsKey(deviceSn + "-" + sno);
+			bean.setMessage(message);
+			bean.setCreateTime(new Date());
+			LastDataDao.insert(bean);
+			
+		} else {
+			LastDataDao.update(deviceSn, sno, message);
+		}
+		
 	}
 	
 	private static Document makeTimeDoc(Date time) {

@@ -47,4 +47,8 @@ public class JsonHelper {
 		return o;
 	}
 	
+	public static String ajustDouble4Json(String json) {
+		 return json.replaceAll(".0,", ",").replaceAll(".0}", "}");
+	}
+	
 }
