@@ -313,13 +313,25 @@ public class ScheduleService {
 	}
 	
 	@SuppressWarnings("unchecked")
+	private static Map<String, Object> getResultSchemaOfSensor(String resultSchema, String sno) {
+
+		Map<String, Object> schMap = JsonHelper.json2map(resultSchema);
+		Map<String, Object> sch = (Map<String, Object>) schMap.get(sno);
+		if (sch.get("type").equals("ref")) {
+			String refSno = (String) sch.get("refsno");
+			sch = (Map<String, Object>) schMap.get(refSno);
+		}
+		
+		return (Map<String, Object>)sch.get("field");
+	}
+	
+	@SuppressWarnings("unchecked")
 	private static void checkRange(String deviceSn, String content, String schema) {
 		Map<String, Object> contentMap = JsonHelper.json2map(content);
 		Integer sno = ((Double)contentMap.get("sno")).intValue();
 		Map<String, Object> valMap = (Map<String, Object>) contentMap.get("data");
 		
-		Map<String, Object> schMap = JsonHelper.json2map(schema);
-		Map<String, Object> fieldMap = (Map<String, Object>) ((Map<String, Object>) schMap.get(String.valueOf(sno))).get("field");
+		Map<String, Object> fieldMap = getResultSchemaOfSensor(schema, String.valueOf(sno));
 		
 		List<Map<String, Object>> eventDataList = new ArrayList<Map<String, Object>>();
 		
