@@ -59,7 +59,11 @@ public class NashornParser {
 			ns = _queue.take();
 			ns.eval(script);
 			Invocable invocable = ns.getSandboxedInvocable();
-			result = (String)invocable.invokeFunction("decodeDat", ByteHelper.toUnsignedInts(data));
+			Object invRes = invocable.invokeFunction("decodeDat", ByteHelper.toUnsignedInts(data));
+			if(! (invRes instanceof String)) {
+				return null;
+			}
+			result = (String)invRes;
 			ParseCache.put(deviceSn, dataStr, result);
 			
 			return result;

@@ -18,7 +18,9 @@ public class LastDataDao extends BaseDao {
 		super(_conn);
 	}
 	
-	static Connection conn = ConnectionPool.getInstance();
+	static Connection conn() {
+		return ConnectionPool.getInstance();
+	}
 	
 	public static LastDataEntity findBySno(String deviceSn, String sensorNo) {
 
@@ -32,7 +34,7 @@ public class LastDataDao extends BaseDao {
 
 			BeanHandler<LastDataEntity> bh = new BeanHandler<LastDataEntity>(LastDataEntity.class);
 			 
-			LastDataEntity bean = (LastDataEntity) qRunner.query(conn, sql, bh, deviceSn, sensorNo);
+			LastDataEntity bean = (LastDataEntity) qRunner.query(conn(), sql, bh, deviceSn, sensorNo);
 	        
 	        return bean;
 	        
@@ -53,14 +55,14 @@ public class LastDataDao extends BaseDao {
 			sql += " set message = ?, updateTime = ?";
 			sql += " where deviceSn = ? and sensorNo = ?";
 				  
-			qRunner.update(conn, sql, 
+			qRunner.update(conn(), sql, 
 					message,
 					new Date(),
 					deviceSn,
 					sensorNo
 					);
 
-			BigInteger id= (BigInteger) qRunner.query(conn, SQL_GET_ID,new ScalarHandler<BigInteger>());
+			BigInteger id= (BigInteger) qRunner.query(conn(), SQL_GET_ID,new ScalarHandler<BigInteger>());
 			
 	        return id.longValue();
 	        
@@ -83,7 +85,7 @@ public class LastDataDao extends BaseDao {
 			sql += " ?, ?, ?, ?, ?, ?";
 			sql += " ) ";
 				  
-			qRunner.update(conn, sql, 
+			qRunner.update(conn(), sql, 
 					bean.getDeviceSn(),
 					bean.getSensorNo(),
 					bean.getDsKey(),
@@ -92,7 +94,7 @@ public class LastDataDao extends BaseDao {
 					new Date()
 					);
 
-			BigInteger id= (BigInteger) qRunner.query(conn, SQL_GET_ID,new ScalarHandler<BigInteger>());
+			BigInteger id= (BigInteger) qRunner.query(conn(), SQL_GET_ID,new ScalarHandler<BigInteger>());
 			
 	        return id.longValue();
 	        

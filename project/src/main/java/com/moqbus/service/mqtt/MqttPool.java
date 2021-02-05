@@ -80,7 +80,7 @@ public class MqttPool {
 				
 				while(true) {
 					
-					if (_mqttClientDisconnectedList.size() > 0) {
+					if (hasLostConnections()) {
 						reconnect();
 						logger.info("_mqttClientDisconnectedList.size=" + _mqttClientDisconnectedList.size());
 					}
@@ -104,12 +104,12 @@ public class MqttPool {
 		// 重连接
 		_mqttClientDisconnectedList.forEach((E)->{
 			try {
-				if (!E.isConnected()) {
-					E.connect(_connOpts);
-					// 重新订阅
-					MqttProxy.doAfterReconnect();
-					logger.info("reconnected. client=" + E.getClientId());
-				}
+
+				E.connect(_connOpts);
+				// 重新订阅
+				MqttProxy.doAfterReconnect();
+				logger.info("reconnected. client=" + E.getClientId());
+				
 				successList.add(E);
 			} catch (MqttException e) {
 				logger.error("", e);
@@ -121,17 +121,25 @@ public class MqttPool {
 			_mqttClientDisconnectedList.remove(E);
 		});
 		
+		
+	}
+	
+	private boolean hasLostConnections() {
+
 		// 全面检查
 		_mqttClientList.forEach((E)->{
 
-			if (!E.isConnected()) {
-				if (!_mqttClientDisconnectedList.contains(E)) {
-					_mqttClientDisconnectedList.add(E);
-				}
+			if (!checkConnectionStatus(E)) {
+				_mqttClientDisconnectedList.add(E);
 			}
 		});
-
 		
+		if (_mqttClientDisconnectedList.size() > 0) {
+			return true;
+		} else {
+			return false;
+		}
+
 	}
 
 	public  MqttClient getInstance() {
@@ -184,6 +192,17 @@ public class MqttPool {
 	
 	private  String makeClientId() {
 		return CryptoHelper.genUUID();
+	}
+	
+	private boolean checkConnectionStatus(MqttClient mqttClient) {
+		try {
+			mqttClient.publish("TC/HEART_BEAT/JBUS_SERVICE", new MqttMessage(new byte[]{0x00}));
+			logger.info("HEART_BEAT 发布成功。" + mqttClient.getClientId());
+			return true;
+		} catch (MqttException e) {
+			logger.info("HEART_BEAT 发布失败。" + mqttClient.getClientId());
+			return false;
+		}
 	}
 
 }
